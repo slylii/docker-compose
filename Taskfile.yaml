@@ -1,0 +1,41 @@
+version: '3'
+
+dotenv: ['.env']
+
+env:
+  VERSION: '{{ .VERSION | default ( now | unixEpoch ) }}'
+  BASE_IMAGE: '{{ .BASE_IMAGE | default "ubuntu" }}'
+  IMAGE_TAG: '{{ .BASE_IMAGE }}-{{ .VERSION }}'
+
+tasks:
+  build:
+    cmds:
+      - scripts/build.sh
+
+  json:
+      deps:
+        - build
+      cmds:
+       - yq '. | to_json' ${BUILD_PATH}/${CV}.yaml > ${BUILD_PATH}/${CV}.json
+
+  skill_by_level:
+    yq '.skills[] | select(.level == "{{.CLI_ARGS}}") | .name' ${SRC_PATH}/skills.yaml
+
+
+  docker-builder:
+    cmds:
+      - docker build -t cv-builder:{{ .IMAGE_TAG }} -f Dockerfile.{{ .BASE_IMAGE }} --target builder .
+
+  docker-release:
+    docker build -t cv:{{ .IMAGE_TAG }} -f Dockerfile.{{ .BASE_IMAGE }} .
+
+  docker-build:
+    cmds:
+      - task: docker-builder
+      - task: docker-release
+
+  docker-run-task:
+    deps:
+      - docker-builder
+    cmds:
+      - docker run --rm -ti cv-builder:{{ .IMAGE_TAG }} {{.CLI_ARGS}}
