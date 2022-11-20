@@ -6,20 +6,24 @@ env:
   VERSION: '{{ .VERSION | default ( now | unixEpoch ) }}'
   BASE_IMAGE: '{{ .BASE_IMAGE | default "ubuntu" }}'
   IMAGE_TAG: '{{ .BASE_IMAGE }}-{{ .VERSION }}'
+  PROJECT: '{{ .PROJECT | default "cv" }}'
 
-tasks:
-  build:
-    cmds:
-      - scripts/build.sh
+  tasks:
+    build:
+      cmds:
+        - scripts/build.sh
 
   json:
       deps:
         - build
       cmds:
-       - yq '. | to_json' ${BUILD_PATH}/${CV}.yaml > ${BUILD_PATH}/${CV}.json
+        - yq '. | to_json' {{ .BUILD_PATH }}/{{ .CV }}.yaml > {{ .BUILD_PATH }}/{{ .CV }}.json
 
   skill_by_level:
-    yq '.skills[] | select(.level == "{{.CLI_ARGS}}") | .name' ${SRC_PATH}/skills.yaml
+    env:
+      LEVEL: ".LEVEL"
+    cmds:
+      - yq '.skills[] | select(.level == "{{ .LEVEL }}") | .name' {{ .SRC_PATH }}/skills.yaml
 
 
   docker-builder:
@@ -39,3 +43,15 @@ tasks:
       - docker-builder
     cmds:
       - docker run --rm -ti cv-builder:{{ .IMAGE_TAG }} {{.CLI_ARGS}}
+
+  docker-server-foreground:
+    docker-compose -p {{ .PROJECT }} up
+
+  docker-server-background:
+    docker-compose -p {{ .PROJECT }} up -d
+
+  docker-server-stop:
+    docker-compose -p {{ .PROJECT }} down -v --remove-orphans
+
+  test-ha-server:
+    while true; do curl -v http://localhost:8080 & sleep 1; done;
