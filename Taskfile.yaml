@@ -3,9 +3,7 @@ version: '3'
 dotenv: ['.env']
 
 env:
-  VERSION: '{{ .VERSION | default ( now | unixEpoch ) }}'
-  BASE_IMAGE: '{{ .BASE_IMAGE | default "ubuntu" }}'
-  IMAGE_TAG: '{{ .BASE_IMAGE }}-{{ .VERSION }}'
+  IMAGE_TAG: '{{ .IMAGE_TAG | default "test" }}'
   PROJECT: '{{ .PROJECT | default "cv" }}'
 
   tasks:
@@ -28,10 +26,10 @@ env:
 
   docker-builder:
     cmds:
-      - docker build -t cv-builder:{{ .IMAGE_TAG }} -f Dockerfile.{{ .BASE_IMAGE }} --target builder .
+      - docker build -t cv-builder:{{ .IMAGE_TAG }} Dockerfile --target builder .
 
   docker-release:
-    docker build -t cv:{{ .IMAGE_TAG }} -f Dockerfile.{{ .BASE_IMAGE }} .
+    docker build -t cv:{{ .IMAGE_TAG }} Dockerfile .
 
   docker-build:
     cmds:
