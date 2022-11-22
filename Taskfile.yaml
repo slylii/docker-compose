@@ -26,10 +26,10 @@ env:
 
   docker-builder:
     cmds:
-      - docker build -t cv-builder:{{ .IMAGE_TAG }} Dockerfile --target builder .
+      - docker build -t cv-builder:{{ .IMAGE_TAG }} --target builder .
 
   docker-release:
-    docker build -t cv:{{ .IMAGE_TAG }} Dockerfile .
+    docker build -t cv:{{ .IMAGE_TAG }} .
 
   docker-build:
     cmds:
