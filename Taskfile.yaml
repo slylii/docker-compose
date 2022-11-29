@@ -19,7 +19,7 @@ env:
 
   skill_by_level:
     env:
-      LEVEL: ".LEVEL"
+      LEVEL: "medium"
     cmds:
       - yq '.skills[] | select(.level == "{{ .LEVEL }}") | .name' {{ .SRC_PATH }}/skills.yaml
 
