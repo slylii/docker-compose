@@ -1,0 +1,31 @@
+services:
+  cv:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+      target: release
+    volumes:
+      - cv:/app
+
+  worker:
+    depends_on:
+      - cv
+    image: nginx:1.23.2-alpine
+    deploy:
+      replicas: 3
+    volumes:
+      - ./config/nginx/worker.conf:/etc/nginx/conf.d/default.conf
+      - cv:/usr/share/nginx/html
+      - cv:/app
+
+  balancer:
+    depends_on:
+      - worker
+    ports:
+      - 8080:80
+    image: nginx:1.23.2-alpine
+    volumes:
+      - ./config/nginx/balancer.conf:/etc/nginx/conf.d/default.conf
+
+volumes:
+  cv:
