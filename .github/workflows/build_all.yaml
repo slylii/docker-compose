@@ -1,0 +1,23 @@
+name: Build all variants of docker images
+on:
+  push: {}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        base_image:
+          - ubuntu
+        target:
+          - builder
+          - release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Project
+        uses: actions/checkout@v3
+
+      - name: build
+        uses: ./.github/actions/build_image
+        with:
+          image: ${{ matrix.target }}:${{ matrix.base_image }}
+          target: ${{ matrix.target }}

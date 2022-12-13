@@ -1,0 +1,25 @@
+name: "Build docker image"
+description: "Action to build docker image"
+inputs:
+  image:
+    description: "image:tag"
+    required: true
+  dockerfile:
+    description: "Dockerfile to use"
+    required: true
+    default: "Dockerfile"
+  target:
+    description: "target to build"
+    required: false
+    default: ""
+  context:
+    description: "context"
+    required: true
+    default: "."
+outputs: {}
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        docker build -t ${{ inputs.image }} -f ${{ inputs.dockerfile }} --target ${{ inputs.target }} ${{ inputs.context }}
+      shell: bash

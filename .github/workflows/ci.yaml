@@ -1,0 +1,40 @@
+name: CI workflow
+on:
+  push: {}
+  workflow_dispatch:
+    inputs:
+      tag:
+        default: latest
+        description: image tag
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BUILDER_IMAGE: cv-builder
+      RELEASE_IMAGE: cv
+      TAG: "${{ inputs.tag != '' && inputs.tag || github.ref_name }}"
+      BASE_IMAGE: "${{ inputs.base_image != '' && inputs.base_image || 'ubuntu' }}"
+    steps:
+      - name: Check out Project
+        uses: actions/checkout@v3
+
+      - name: Build builder image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: ${{ env.BUILDER_IMAGE }}:${{ env.TAG }}
+          target: builder
+
+      - name: Test
+        run: |
+          docker run --rm ${{ env.BUILDER_IMAGE }}:${{ env.TAG }} json
+      - name: Build release image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: ${{ env.BUILDER_IMAGE }}:${{ env.TAG }}
